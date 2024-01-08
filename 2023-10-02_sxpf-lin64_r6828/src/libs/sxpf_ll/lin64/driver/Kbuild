@@ -1,0 +1,13 @@
+obj-m += sxpf.o
+sxpf-y := sxpf_module.o sxpf_cmd_fifo.o proc_dbg.o
+
+XVC_MODULENAME = xilinx_xvc_pci_driver
+XVC_OBJS := mmconfig-shared.o mmconfig_64.o xvc_pcie_driver.o
+XVC_CUSTOM_CFG := -DINCLUDE_CUSTOM_MMCONFIG
+
+sxpf-y	+= $(addprefix xvc-driver/,$(XVC_OBJS)) sxpf_xvc.o
+
+ccflags-y := -I$(src)/../../../support -I$(src)/../.. -I$(src)/.. -DKERNEL \
+	     -DLOG_PREFIX=\"$(XVC_MODULENAME):\ \" -I$(src)/xvc-driver -Wno-unused
+
+# vim: ft=make ts=8 noet

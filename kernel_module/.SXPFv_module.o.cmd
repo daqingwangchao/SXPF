@@ -1,0 +1,1 @@
+cmd_/home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/SXPFv_module.o := ld -m elf_x86_64 -z noexecstack   -r -o /home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/SXPFv_module.o /home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/sxpf-virtualization.o

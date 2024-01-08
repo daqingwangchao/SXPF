@@ -1,0 +1,16 @@
+# sxpf_ll - Solectrix proFRAME grabber low-level library
+prefix=$(PREFIX)
+bindir=${prefix}/bin
+libdir=${prefix}/lib
+incdir=${prefix}/include
+
+
+Name: sxpf_ll
+Description: SX proFRAME low-level card access library
+Version: 1.0.0
+URL: http://www.fpga.sx
+Requires: sxpf_support = 1.0.0  # for packed.h/endpacked.h
+Conflicts:
+Libs: -L${libdir} -lsxpf_ll
+#Libs.private: -lm
+Cflags: -I${incdir}/sxpf

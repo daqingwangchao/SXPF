@@ -1,0 +1,3 @@
+
+# SX proFRAME devices may be read/written by anyone
+ACTION=="add", SUBSYSTEM=="sxpf", KERNEL=="sxpf[0-9]*", MODE="0666"

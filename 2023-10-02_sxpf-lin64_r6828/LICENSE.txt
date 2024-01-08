@@ -1,0 +1,11 @@
+Unless specified otherwise all files are delivered under the following terms
+
+COPYRIGHT (c) SOLECTRIX GmbH, Germany, 2023            All rights reserved
+
+The copyright to the document(s) herein is the property of SOLECTRIX GmbH
+The document(s) may be used and/or copied only with the written permission
+from SOLECTRIX GmbH or in accordance with the terms/conditions stipulated
+in the agreement/contract under which the document(s) have been supplied
+
+
+

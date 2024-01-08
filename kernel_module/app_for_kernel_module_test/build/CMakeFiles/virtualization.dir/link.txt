@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/virtualization.dir/main.c.o -o virtualization  ../../../../../Share/2023-10-02_sxpf-lin64_r6828/src/release/libs/libsxpf_ll.a 

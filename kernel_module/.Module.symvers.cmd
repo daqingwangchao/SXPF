@@ -1,0 +1,1 @@
+cmd_/home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/Module.symvers := sed 's/\.ko$$/\.o/' /home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/modules.order | scripts/mod/modpost -m -a  -o /home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/Module.symvers -e -i Module.symvers   -T -

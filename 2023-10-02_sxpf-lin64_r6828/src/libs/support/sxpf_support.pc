@@ -1,0 +1,16 @@
+# sxpf_support - C++ Support library for the Solectrix proFRAME grabber software
+prefix=$(PREFIX)
+bindir=${prefix}/bin
+libdir=${prefix}/lib
+incdir=${prefix}/include
+
+
+Name: sxpf_support
+Description: C++ Support library for the Solectrix proFRAME grabber software
+Version: 1.0.0
+URL: http://www.fpga.sx
+Requires:
+Conflicts:
+Libs: #-L${libdir} -lsupport
+#Libs.private: -lm
+Cflags: -I${incdir}/sxpf

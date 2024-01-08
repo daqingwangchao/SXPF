@@ -1,0 +1,1 @@
+cmd_/home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/SXPFv_module.mod := { echo  /home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/sxpf-virtualization.o;  echo; } > /home/zhy3rng/kernel_devolop/hil-sxpf-virtualization/kernel_module/SXPFv_module.mod
