@@ -9,8 +9,7 @@ MODULE_VERSION("0.1");
 #define DEFAULT_MAJOR_NUM 0
 
 // Store the information for the current opened virtual devices (sxpfx_x)
-int current_dev_ID =
-    0;  // Store the device ID(Major + Minor) in the current running procedure
+int current_dev_ID = 0;  // Store the device ID(Major + Minor) in the current running procedure
 dev_t dev;  // The 12 most significant bits are the primary devnum, and the 20
             // least significant bits are the secondary devnum
 
@@ -18,8 +17,7 @@ dev_t dev;  // The 12 most significant bits are the primary devnum, and the 20
 int major_number = DEFAULT_MAJOR_NUM;
 int minor_number = 0;
 
-int nr_dev =
-    DEV_NUM;  // For initialization; later, the value of "nr_dev"(number of real
+int nr_dev = DEV_NUM;  // For initialization; later, the value of "nr_dev"(number of real
               // ohysical devices) can be changed
 int total_channels = 0,
     channels_per_device[10];  // Global channel number over all devices
@@ -44,6 +42,8 @@ module_param(major_number, int, S_IRUGO);  // linux/moduleparam.h
 module_param(minor_number, int, S_IRUGO);
 module_param(nr_dev, int, S_IRUGO);
 
+
+
 struct VirtualDeviceData {
   struct cdev cdev;
 };
@@ -54,6 +54,177 @@ static struct class *virtual_device_class = NULL;
 static struct VirtualDeviceData *virtual_device_structures;
 
 
+void Triggle(int *port) {
+    ~(*port)+2;
+   
+}
+
+/**
+ * Callback function from sxpfv_ioctl which is used for channal mapping of command "ioctl_relase_frame"
+ *
+ * @param arg: address from user space
+ * @return 0 sucess, other value fails.
+*/
+static int ioctl_relase_frame_v(unsigned long arg) {
+  
+    u32 ch; //store channel number
+
+    ch = MINOR(current_dev_ID);
+    if (ch > 7) {
+    ch = ch % 8;
+    }
+
+    pr_info("now I am in IOCTL_SXPF_RELEASE_FRAME\n");
+    sxpf_frame_info_t request;
+
+    if (copy_from_user(&request, (void __user *)arg, sizeof(request))) {
+        return -EIO;
+    }
+
+    u32 coded_channel = request.data_size;
+    u32 decoded_channel = coded_channel >> 30;
+    pr_info("SXPFv: coded channel: %ld, decoded channel: %ld", coded_channel, decoded_channel);
+
+    coded_channel &= 0x3FFFFFFF; // clear the most two bits(30..31) 
+
+    request.data_size = (ch << 30) | coded_channel; // set the modified value to the most two bits
+    request.target = ch; // this has no influence to the channal mappping
+    
+    pr_info("SXPFv: moified channel number back to user space: %ld, channel_new: %ld", request.data_size, request.data_size >> 30);
+
+    if (copy_to_user((void __user *)arg, &request, sizeof(request))){
+      return -EIO;
+    }
+
+      return 0;
+}
+
+
+static int ioctl_write_reg_v(unsigned long arg){
+
+    u32 port = 0;
+    Triggle(&port);
+    sxpf_rw_register_t  rw;
+    if (copy_from_user(&rw, (void __user *)arg, sizeof(rw))) {
+        return -EIO;
+    }
+
+    pr_info("before, rw.offs: %d, rw.data: %d\n", rw.offs, rw.data);
+
+    if (rw.offs == 0x30 && rw.data == 0x4) { //for original_port 0, event 0
+        int inc = 4;
+        rw.offs = (rw.offs + (inc * port)) & 0x00fffffc;
+    } else if (rw.offs == 0x20 && rw.data == 0x2) {
+        int inc = 4;
+        rw.offs = (rw.offs + (inc * port)) & 0x00fffffc;
+    } else if (rw.offs == 0x30 && rw.data == 0x0) {
+        int inc = 4;
+        rw.offs = (rw.offs + (inc * port)) & 0x00fffffc;
+    } else if (rw.offs == 0xa4a0 && rw.data == 0xc0) {
+        int inc = 2048;
+        rw.offs = (rw.offs + (inc * port)) & 0x00fffffc;
+    } else if (rw.offs == 0x58 && rw.data == 0x8) { //hier start event 2
+        int inc = 0;
+        rw.offs = (rw.offs + (inc * port)) & 0x00fffffc;
+    } else if (rw.offs == 0x20 && rw.data == 0x2) {
+        int inc = 4;
+        rw.offs = (rw.offs + (inc * port)) & 0x00fffffc;
+    } else if (rw.offs == 0x5c && rw.data == 0x8) {
+        int inc = 0;
+        rw.offs = (rw.offs + (inc * port)) & 0x00fffffc;
+    }
+
+    if (rw.bar == PLASMA_REGION && (rw.data == 6 || rw.data == 2)) { //2 is from read_register
+      rw.offs = 0x20 + 4 * port;
+    }
+
+
+    if (rw.data == (0x0000000c|0x004e0000)) { //0xc is coded value from register_read; 
+        rw.offs = 0x90 + 0x20 * port;
+    } else if (rw.data == (0x0000000c|0x001b0000)) {
+        rw.offs = 0x94 + 0x20 * port;
+    } else if (rw.data == (0x0000000c|0x004e0000)) {
+        rw.offs = 0x98 + 0x20 * port;
+    } else if (rw.data == (0x0000000c|0x00930000)) {
+        rw.offs = 0x9c + 0x20 * port;
+    } else {
+      pr_alert("unexpected value of rw.data from userspace\n");
+    }
+    if (copy_to_user((void __user *)arg, &rw, sizeof(rw))){
+      return -EIO;
+    }
+
+    pr_info("write_reg::rw.offs: %d, rw.data: %d\n", rw.offs, rw.data);
+
+    return 0;
+}
+
+static int ioctl_read_reg_v(unsigned long arg){
+
+    u32 port = 0;
+    
+    sxpf_rw_register_t  rw;
+
+    if (copy_from_user(&rw, (void __user *)arg, sizeof(rw))) {
+        return -EIO;
+    } 
+
+    if (rw.bar == PLASMA_REGION) {
+        Triggle(&port); //1
+        rw.offs = 0x20 + 4 * port;
+        Triggle(&port);//0
+    } 
+
+    if (rw.bar == 0 && rw.offs == 0x90 + 0x20 * port) {
+        Triggle(&port);//1
+        rw.offs = 0x90 + 0x20 * port;
+        Triggle(&port);//0
+    } else if (rw.bar == 0 && rw.offs == 0x94 + 0x20 * port) {
+        Triggle(&port);
+        rw.offs = 0x94 + 0x20 * port;
+        Triggle(&port);
+    } else if (rw.bar == 0 && rw.offs == 0x98 + 0x20 * port) {
+        Triggle(&port);
+        rw.offs = 0x98 + 0x20 * port;
+        Triggle(&port);
+    } else if (rw.bar == 0 && rw.offs == 0x9C + 0x20 * port) {
+        Triggle(&port);
+        rw.offs = 0x9C + 0x20 * port;
+        Triggle(&port);
+    } else {
+        pr_info("unexpected data to read register from user space!\n");
+    }
+
+    if (copy_to_user((void __user *)arg, &rw, sizeof(rw))) {
+      return -EIO;
+    }
+    return 0;
+}
+
+static int ioctl_send_cmd_sync_v(unsigned long arg) {
+    int  ret = 0;
+    sxpf_cmd_fifo_el_t  request;
+    u32 port = 0;
+    Triggle(&port);
+
+    if (copy_from_user(&request, (void __user *)arg, sizeof(request))) {
+        return -EIO;
+    }
+
+    if (request.cmd_stat == SXPF_CMD_I2C_TRANSFER | SXPF_CMD_STATUS_REQUEST) {
+      request.args[1] = port; 
+    } 
+
+    if (request.cmd_stat == SXPF_CMD_I2C_SET_BAUDRATE | SXPF_CMD_STATUS_REQUEST) {
+      request.args[3] = port; 
+    }
+
+
+    if (copy_to_user((void __user *)arg, &request, sizeof(request))) {
+      return -EIO;
+    }
+  return 0;
+}
 
 /**  Find the corresponding avaliable channel number for every device
  *
@@ -64,7 +235,6 @@ static struct VirtualDeviceData *virtual_device_structures;
  *
  * @return channel_count: Number of channel for each device
  */
-
 static int get_num_of_channels(int dev_index) {
   int channel_count;
   struct file *f;
@@ -74,7 +244,6 @@ static int get_num_of_channels(int dev_index) {
   pr_info("SXPFx: open device\n");
 
   sprintf(s, "/dev/sxpf%d", dev_index);
-  // snprintf(s, sizeof(s), "/dev/sxpf%d", dev_index);
   pr_info("Debug: open device: %s\n", s);
   f = filp_open(s, O_RDWR, 0);
   if (IS_ERR(f)) {
@@ -212,6 +381,7 @@ fail:
   return ret;
 }
 
+
 static int __init sxpfv_init(void) {
   int j, temp;
 
@@ -327,6 +497,7 @@ static int sxpfv_release(struct inode *inode, struct file *file) {
   }
 }
 
+
 static unsigned int sxpfv_poll(struct file *file, poll_table *wait) {
   struct file *f;
   f = file->private_data;
@@ -350,7 +521,8 @@ static long sxpfv_ioctl(struct file *file, unsigned int cmd,
   
   pr_info("SXPFx: sxpfv_ioct\n");
 
-  u32 ch;
+  //CH_MAP_CB cb;
+  int ret;
 
                         
   struct file *f = file->private_data;    // file struct from sxpf driver
@@ -360,53 +532,21 @@ static long sxpfv_ioctl(struct file *file, unsigned int cmd,
 
   pr_info("SXPFx: currently is the device(current_dev_ID)%d, %d, %x\n", MAJOR(current_dev_ID), MINOR(current_dev_ID), current_dev_ID);
 
-  ch = MINOR(current_dev_ID);
-  if (ch > 7) {
-    ch = ch % 8;
-  }
-
   switch (cmd) {
     case IOCTL_SXPF_RELEASE_FRAME: {
-
-       pr_info("now I am in IOCTL_SXPF_RELEASE_FRAME\n");
-       sxpf_frame_info_t request;
-
-        if (copy_from_user(&request, (void __user *)arg, sizeof(request))) {
-            return -EIO;
-        }
-        u32 coded_channel = request.data_size;
-        u32 decoded_channel = coded_channel >> 30;
-        pr_info("SXPFv: coded channel: %ld, decoded channel: %ld", coded_channel, decoded_channel);
-
-        coded_channel &= 0x3FFFFFFF; // clear the most two bits(30..31) 
-
-        request.data_size = (ch << 30) | coded_channel; // set the modified value to the most two bits
-        request.target = ch; // this has no influence to the channal mappping
-
-        pr_info("SXPFv: moified channel number back to user space: %ld, channel_new: %ld", request.data_size, request.data_size >> 30);
-
-        if (copy_to_user((void __user *)arg, &request, sizeof(request))){
-          return -EIO;
-        }  
-      
+      ret = ioctl_relase_frame_v(arg);
     } break;
         
-
     case IOCTL_SXPF_CMD_SYNC: {
+      ret = ioctl_send_cmd_sync_v(arg);
+    } break;
 
-        pr_info("now I am in IOCTL_SXPF_CMD_SYNC\n");
-        sxpf_cmd_fifo_el_t  request;
+    case IOCTL_SXPF_WRITE_REG: {
+      ret = ioctl_write_reg_v(arg);
+    } break;
 
-        if (copy_from_user(&request, (void __user *)arg, sizeof(request))) {
-            return -EIO;
-        }
-
-        request.args[3] = ch;
-
-        if (copy_to_user((void __user *)arg, &request, sizeof(request))){
-          return -EIO;
-        }  
-
+    case IOCTL_SXPF_READ_REG: {
+      ret = ioctl_read_reg_v(arg);
     } break;
         
       
@@ -414,7 +554,7 @@ static long sxpfv_ioctl(struct file *file, unsigned int cmd,
         pr_alert("Unrecognized ioctl cmd.");
   }
 
-return f->f_op->unlocked_ioctl(f, cmd, arg);
+  return f->f_op->unlocked_ioctl(f, cmd, arg);
 }
 
 static ssize_t sxpfv_read(struct file *file, char __user *buf, size_t count,

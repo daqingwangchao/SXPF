@@ -27,14 +27,14 @@ MODULE_INFO(retpoline, "Y");
 
 static const struct modversion_info ____versions[]
 __used __section("__versions") = {
-	{ 0x4cf819e6, "module_layout" },
+	{ 0x6ad771c3, "module_layout" },
 	{ 0x11eb121f, "cdev_del" },
 	{ 0xeb233a45, "__kmalloc" },
 	{ 0xd90cd7e6, "cdev_init" },
 	{ 0xf9418c06, "param_ops_int" },
 	{ 0x3fd78f3b, "register_chrdev_region" },
 	{ 0x15659e9d, "device_destroy" },
-	{ 0xb3f5e170, "filp_close" },
+	{ 0x20268e51, "filp_close" },
 	{ 0x6091b333, "unregister_chrdev_region" },
 	{ 0x3c3ff9fd, "sprintf" },
 	{ 0x6b10bee1, "_copy_to_user" },
@@ -52,11 +52,11 @@ __used __section("__versions") = {
 	{ 0x13c49cc2, "_copy_from_user" },
 	{ 0x52ea150d, "__class_create" },
 	{ 0xe3ec2f2b, "alloc_chrdev_region" },
-	{ 0xc4cc42af, "filp_open" },
+	{ 0x4f7eefcb, "filp_open" },
 	{ 0x9c6febfc, "add_uevent_var" },
 };
 
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "A3A23D5823FDCA4FAA5B5CC");
+MODULE_INFO(srcversion, "3EA20B25B08CD9D86BEDDC2");

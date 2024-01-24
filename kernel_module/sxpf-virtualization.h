@@ -25,14 +25,8 @@
 #include "sxpf_module.h"
 #include "driver_acc.h"
 
-// forward declarations
 
-
-// #include "driver_acc.h"
-// #include "sxpf.h"
-// #include "sxpf_module.h"
-// #include "sxpf_regs.h"
-
+static int ioctl_relase_frame_v(unsigned long arg);
 static int GetNumofChannel(int dev_index);
 static int sxpfv_create(int dev_num_sum, int num_of_channels);
 static int __init sxpfv_init(void);
@@ -62,5 +56,7 @@ static const struct file_operations virtual_dev_fops = {
     .read = sxpfv_read,
     .poll = sxpfv_poll,
 };
+
+
 
 #endif /* MYCHARDEV_DRIVER_H_ */

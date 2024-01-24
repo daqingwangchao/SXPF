@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 
     printf("frame_slot[0]: %d\n", frame_slot[0]);
     img_hdr[0] = sxpf_get_frame_ptr(fg, frame_slot[0]);// hardware allocates frame buffer and extracts the hearder pointer to img_hdr[0]
-    size = fill_frame(argv[3], img_hdr[0]);
+    size = fill_frame(argv[3], img_hdr[0]);k
     printf("address of img_hr[0]: %p\n", img_hdr[0]);
     printf("frame_size: %d, sizeof(xx): %ld\n", img_hdr[0]->frame_size,sizeof(img_hdr[0]->frame_size));
     printf("card: %d, channel: %d\n", img_hdr[0]->card_id, img_hdr[0]->cam_id);

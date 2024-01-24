@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     if (argc >= 3)
     {
         channel = atol(argv[2]);
-        channel = SXPF_STREAM_VIDEO0 << channel | SXPF_STREAM_I2C0 << channel;
+        channel = SXPF_STREAM_VIDEO0 << channel | SXPF_STREAM_I2C0 << channel; // this might be a another way to code the channel number
     }
 
     fg = sxpf_open(card);
